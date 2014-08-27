@@ -1,0 +1,122 @@
+/*
+ * image_converter.cpp
+ *
+ *  Created on: Aug 1, 2014
+ *      Author: ruofeixu
+ */
+
+#include <ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <geometry_msgs/Twist.h>
+
+
+using namespace cv;
+
+static const std::string OPENCV_WINDOW = "Image window";
+
+class ImageConverter
+{
+  ros::NodeHandle nh_;
+  image_transport::ImageTransport it_;
+  image_transport::Subscriber image_sub_;
+  image_transport::Publisher image_pub_;
+  ros::Publisher vel_pub_;
+
+public:
+  ImageConverter()
+    : it_(nh_)
+  {
+    // Subscrive to input video feed and publish output video feed
+    image_sub_ = it_.subscribe("/camera/rgb/image_raw", 1,
+      &ImageConverter::imageCb, this);
+    image_pub_ = it_.advertise("/image_converter/output_video", 1);
+
+    vel_pub_ = it_.advertise("/mobile_base/commands/velocity", 1000);
+
+    cv::namedWindow(OPENCV_WINDOW);
+  }
+
+  ~ImageConverter()
+  {
+    cv::destroyWindow(OPENCV_WINDOW);
+  }
+
+  void imageCb(const sensor_msgs::ImageConstPtr& msg)
+  {
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+    }
+
+    static int posX, posY, lastX, lastY; //To hold the X and Y position of the colored object
+
+    Mat rgbCameraFrames = cv_ptr->image; //hold raw image
+    Mat colorTrackingFrames; //hold color filtered frame
+    Mat resutantFrame; //add raw and scribble frames
+
+    CvMoments colorMoment; //Structure to hold moments information and their order
+    assert(rgbCameraFrames.type() == CV_8UC3);
+
+
+    double frame_middle = rgbCameraFrames.cols / 2;//get middle of the frame
+
+    //test draw
+    cv::circle(cv_ptr->image, cv::Point(frame_middle, 50), 10, CV_RGB(255,0,0));
+
+    GaussianBlur(rgbCameraFrames, colorTrackingFrames, Size(11,11), 0, 0); //reduce the noise
+
+    inRange(colorTrackingFrames, Scalar(0, 0 , 115), Scalar(50,50,255), colorTrackingFrames);//make red color to white and rest to black
+
+    colorMoment =  moments(colorTrackingFrames);
+    double moment10 =  cvGetSpatialMoment(&colorMoment, 1, 0);//Sum of X coordinates of all white pixels
+    double moment01 =  cvGetSpatialMoment(&colorMoment, 0, 1);//Sum of X coordinates of all white pixels
+    double area = cvGetSpatialMoment(&colorMoment, 0, 0); //Sum of all white pixels
+
+    lastX = posX;
+    lastY = posY;
+
+    posX = moment10/area;
+    posY = moment01/area;
+
+    geometry_msg::Twist vel_msg;
+
+
+    if(posX - frame_middle <10 || posX - frame_middle > -10)
+    {
+
+    }
+
+/*
+    // Draw an example circle on the video stream
+    if (cv_ptr->image.rows > 60 && cv_ptr->image.cols > 60)
+      cv::circle(cv_ptr->image, cv::Point(50, 50), 10, CV_RGB(255,0,0));
+*/
+    // Update GUI Window
+    cv::imshow(OPENCV_WINDOW, cv_ptr->image);
+    cv::waitKey(3);
+
+    // Output modified video stream
+    image_pub_.publish(cv_ptr->toImageMsg());
+
+  }
+};
+
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "image_converter");
+  ImageConverter ic;
+  ros::spin();
+  return 0;
+}
+
+

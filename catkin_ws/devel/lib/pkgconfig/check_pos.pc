@@ -1,0 +1,8 @@
+prefix=/home/dana-irl/catkin_ws/devel
+
+Name: check_pos
+Description: Description of check_pos
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dana-irl/catkin_ws/devel/lib 
+Requires: 

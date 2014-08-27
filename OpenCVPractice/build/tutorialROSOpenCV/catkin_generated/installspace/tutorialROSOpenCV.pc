@@ -1,0 +1,8 @@
+prefix=/home/dana-irl/OpenCVPractice/install
+
+Name: tutorialROSOpenCV
+Description: Description of tutorialROSOpenCV
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dana-irl/OpenCVPractice/install/lib 
+Requires: 

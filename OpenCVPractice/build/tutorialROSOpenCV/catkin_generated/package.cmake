@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "tutorialROSOpenCV")
+set(tutorialROSOpenCV_MAINTAINER "dana-irl <dana-irl@todo.todo>")
+set(tutorialROSOpenCV_DEPRECATED "")
+set(tutorialROSOpenCV_VERSION "0.0.0")
+set(tutorialROSOpenCV_BUILD_DEPENDS "cv_bridge" "image_transport" "opencv2" "roscpp" "std_msgs" "uvc_camera")
+set(tutorialROSOpenCV_RUN_DEPENDS "cv_bridge" "image_transport" "opencv2" "roscpp" "std_msgs" "uvc_camera")
+set(tutorialROSOpenCV_BUILDTOOL_DEPENDS "catkin")

@@ -1,0 +1,8 @@
+prefix=/home/dana-irl/catkin_ws/devel
+
+Name: tip_coke
+Description: Description of tip_coke
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dana-irl/catkin_ws/devel/lib 
+Requires: 
